@@ -14,7 +14,7 @@ export function SummarySection({ value, onChange }: SummarySectionProps) {
 
   return (
     <div className="group relative flex flex-col gap-2 mt-4">
-      <h3 className="text-sm font-bold uppercase tracking-wider text-purple-600 border-b border-zinc-100 dark:border-zinc-800 pb-1">
+      <h3 className="text-cv-lg font-bold uppercase tracking-wide text-purple-600 border-b-2 border-purple-600 pb-1">
         Professional Summary
       </h3>
 
@@ -30,7 +30,7 @@ export function SummarySection({ value, onChange }: SummarySectionProps) {
           <div
             role="button"
             tabIndex={0}
-            className="prose prose-sm dark:prose-invert max-w-none cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded p-2 transition-colors min-h-[50px]"
+            className="prose prose-base text-cv-md dark:prose-invert max-w-none cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded p-2 -mx-2 transition-colors min-h-[50px]"
             onClick={() => setIsEditing(true)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {

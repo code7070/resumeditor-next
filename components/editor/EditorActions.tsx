@@ -10,9 +10,12 @@ import {
   FileDown,
   Search,
   ChevronDown,
+  Type,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useRef } from "react";
+import { ImportAction, ImportActionHandle } from "./actions/ImportAction";
 import {
   Tooltip,
   TooltipContent,
@@ -25,14 +28,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
+import { CVData } from "@/lib/types";
 
 interface EditorActionsProps {
   isAIOpen: boolean;
   setIsAIOpen: (open: boolean) => void;
+  settings: CVData["settings"];
+  updateSettings: (settings: Partial<CVData["settings"]>) => void;
+  updateData: (newData: Partial<CVData>) => void;
 }
 
-export function EditorActions({ isAIOpen, setIsAIOpen }: EditorActionsProps) {
+export function EditorActions({
+  isAIOpen,
+  setIsAIOpen,
+  settings,
+  updateSettings,
+  updateData,
+}: EditorActionsProps) {
+  const importActionRef = useRef<ImportActionHandle>(null);
   return (
     <TooltipProvider>
       <div className="flex items-center gap-2">
@@ -88,8 +107,41 @@ export function EditorActions({ isAIOpen, setIsAIOpen }: EditorActionsProps) {
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem className="gap-2">
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="gap-2">
+                <Type className="h-4 w-4" />
+                Font Type
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup
+                  value={settings.fontFamily}
+                  onValueChange={(val) =>
+                    updateSettings({ fontFamily: val as any })
+                  }
+                >
+                  <DropdownMenuRadioItem
+                    value="classic"
+                    className="flex items-center justify-between"
+                  >
+                    Times
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem
+                    value="modern"
+                    className="flex items-center justify-between"
+                  >
+                    Calibri
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              className="gap-2"
+              onSelect={() => importActionRef.current?.open()}
+            >
               <FileUp className="h-4 w-4" />
               Import PDF/JSON
             </DropdownMenuItem>
@@ -97,7 +149,9 @@ export function EditorActions({ isAIOpen, setIsAIOpen }: EditorActionsProps) {
               <FileDown className="h-4 w-4" />
               Export
             </DropdownMenuItem>
+
             <DropdownMenuSeparator />
+
             <DropdownMenuItem className="gap-2 focus:bg-purple-50 focus:text-purple-600 dark:focus:bg-purple-900/20">
               <Search className="h-4 w-4" />
               ATS Scanner
@@ -109,6 +163,8 @@ export function EditorActions({ isAIOpen, setIsAIOpen }: EditorActionsProps) {
           <Share2 className="h-4 w-4" />
           Share
         </Button>
+
+        <ImportAction ref={importActionRef} updateData={updateData} />
       </div>
     </TooltipProvider>
   );

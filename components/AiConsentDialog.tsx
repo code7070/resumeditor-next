@@ -14,20 +14,37 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Sparkles, ShieldCheck } from "lucide-react";
 
-export function AiConsentDialog() {
-  const [open, setOpen] = useState(false);
+interface AiConsentDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onAccept?: () => void;
+  ignoreSavedConsent?: boolean;
+}
+
+export function AiConsentDialog({
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  onAccept,
+  ignoreSavedConsent = false,
+}: AiConsentDialogProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [hasConsented, setHasConsented] = useState(false);
 
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
+
   useEffect(() => {
+    if (controlledOpen !== undefined) return;
     const consent = localStorage.getItem("ai-consent-granted");
-    if (consent !== "true") {
+    if (consent !== "true" && !ignoreSavedConsent) {
       setOpen(true);
     }
-  }, []);
+  }, [controlledOpen, ignoreSavedConsent, setOpen]);
 
   const handleAccept = () => {
     localStorage.setItem("ai-consent-granted", "true");
     setOpen(false);
+    onAccept?.();
   };
 
   return (

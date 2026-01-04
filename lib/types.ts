@@ -30,6 +30,9 @@ export interface CVData {
   summary: string;
   experience: ExperienceItem[];
   customSections: CustomSection[];
+  settings: {
+    fontFamily: "classic" | "modern";
+  };
 }
 
 export const initialCVData: CVData = {
@@ -68,4 +71,7 @@ export const initialCVData: CVData = {
       year: "2022",
     },
   ],
+  settings: {
+    fontFamily: "modern",
+  },
 };

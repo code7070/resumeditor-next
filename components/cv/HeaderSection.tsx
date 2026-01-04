@@ -1,9 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { CVData, Link } from "@/lib/types";
+import { useState, useEffect } from "react";
+import { CVData, Link as LinkType } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { MapPin, Pencil, Plus, Trash2, GripVertical } from "lucide-react";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
+import {
+  Pencil,
+  Plus,
+  Trash2,
+  GripVertical,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,6 +21,16 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 
 interface HeaderSectionProps {
   data: CVData["header"];
@@ -19,200 +38,309 @@ interface HeaderSectionProps {
 }
 
 export function HeaderSection({ data, updateHeader }: HeaderSectionProps) {
-  const [editingField, setEditingField] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [localData, setLocalData] = useState(data);
+
+  // Sync local state when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setLocalData(data);
+    }
+  }, [isOpen, data]);
 
   const handleLinkUpdate = (
     index: number,
-    field: keyof Link,
+    field: keyof LinkType,
     value: string
   ) => {
-    const newLinks = [...data.links];
+    const newLinks = [...localData.links];
     newLinks[index] = { ...newLinks[index], [field]: value };
-    updateHeader({ links: newLinks });
+    setLocalData({ ...localData, links: newLinks });
   };
 
   const addLink = () => {
-    updateHeader({ links: [...data.links, { text: "New Link", url: "" }] });
+    setLocalData({
+      ...localData,
+      links: [...localData.links, { text: "New Link", url: "" }],
+    });
   };
 
   const removeLink = (index: number) => {
-    updateHeader({ links: data.links.filter((_, i) => i !== index) });
+    setLocalData({
+      ...localData,
+      links: localData.links.filter((_, i) => i !== index),
+    });
   };
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-    const items = Array.from(data.links);
+    const items = Array.from(localData.links);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-    updateHeader({ links: items });
+    setLocalData({ ...localData, links: items });
+  };
+
+  const handleSave = () => {
+    updateHeader(localData);
+    setIsOpen(false);
   };
 
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-1",
-        data.alignment === "center"
-          ? "items-center text-center"
-          : "items-start text-left"
-      )}
-    >
-      {/* Name */}
-      <div className="group relative w-full">
-        {editingField === "name" ? (
-          <Input
-            value={data.name}
-            onChange={(e) => updateHeader({ name: e.target.value })}
-            onBlur={() => setEditingField(null)}
-            autoFocus
-            className="text-3xl font-bold text-center h-auto py-1 px-2 border-none focus-visible:ring-1 focus-visible:ring-purple-500"
-          />
-        ) : (
-          <h1
-            role="button"
-            tabIndex={0}
-            className="text-3xl font-bold cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded px-2"
-            onClick={() => setEditingField("name")}
-            onKeyDown={(e) => e.key === "Enter" && setEditingField("name")}
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <div
+          className="group/header relative cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/50 rounded-lg p-4 -mx-4 transition-all"
+          role="button"
+          tabIndex={0}
+        >
+          <div
+            className={cn(
+              "flex flex-col gap-1",
+              data.alignment === "center" && "items-center text-center",
+              data.alignment === "left" && "items-start text-left",
+              data.alignment === "right" && "items-end text-right"
+            )}
           >
-            {data.name || "Your Name"}
-            <Pencil className="absolute -right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-4 w-4 text-zinc-400" />
-          </h1>
-        )}
-      </div>
+            <h1 className="text-cv-xl font-bold text-zinc-900 dark:text-zinc-50 leading-none">
+              {data.name || "Your Name"}
+            </h1>
+            {data.role && (
+              <h2 className="text-cv-lg font-medium text-zinc-600 dark:text-zinc-400 mt-1">
+                {data.role}
+              </h2>
+            )}
 
-      {/* Role */}
-      <div className="group relative w-full">
-        {editingField === "role" ? (
-          <Input
-            value={data.role}
-            onChange={(e) => updateHeader({ role: e.target.value })}
-            onBlur={() => setEditingField(null)}
-            autoFocus
-            className="text-xl text-zinc-600 dark:text-zinc-400 text-center border-none focus-visible:ring-1 focus-visible:ring-purple-500"
-          />
-        ) : (
-          <h2
-            role="button"
-            tabIndex={0}
-            className="text-xl text-zinc-600 dark:text-zinc-400 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded px-2"
-            onClick={() => setEditingField("role")}
-            onKeyDown={(e) => e.key === "Enter" && setEditingField("role")}
-          >
-            {data.role || "Professional Title"}
-            <Pencil className="absolute -right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-4 w-4 text-zinc-400" />
-          </h2>
-        )}
-      </div>
-
-      {/* Address */}
-      <div className="group relative flex items-center gap-2 mt-1">
-        <MapPin className="h-3 w-3 text-zinc-400" />
-        {editingField === "address" ? (
-          <Input
-            value={data.address}
-            onChange={(e) => updateHeader({ address: e.target.value })}
-            onBlur={() => setEditingField(null)}
-            autoFocus
-            className="text-xs border-none h-auto py-0.5 px-1 focus-visible:ring-1 focus-visible:ring-purple-500"
-          />
-        ) : (
-          <span
-            role="button"
-            tabIndex={0}
-            className="text-xs text-zinc-500 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded px-1"
-            onClick={() => setEditingField("address")}
-            onKeyDown={(e) => e.key === "Enter" && setEditingField("address")}
-          >
-            {data.address || "Location"}
-          </span>
-        )}
-      </div>
-
-      {/* Links */}
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="links" direction="horizontal">
-          {(provided) => (
             <div
-              {...provided.droppableProps}
-              ref={provided.innerRef}
-              className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-2"
+              className={cn(
+                "flex flex-wrap items-center gap-x-2 gap-y-1 text-cv-md text-zinc-500 mt-1",
+                data.alignment === "center" && "justify-center",
+                data.alignment === "right" && "justify-end"
+              )}
             >
-              {data.links.map((link, index) => (
-                <Draggable
-                  key={`link-${index}`}
-                  draggableId={`link-${index}`}
-                  index={index}
-                >
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      className="group relative flex items-center gap-1 text-xs text-zinc-500 bg-zinc-50 dark:bg-zinc-900/50 px-2 py-0.5 rounded border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
-                    >
-                      <div {...provided.dragHandleProps}>
-                        <GripVertical className="h-3 w-3 text-zinc-300 group-hover:text-zinc-400" />
-                      </div>
-                      {editingField === `link-${index}` ? (
-                        <div className="flex gap-1 items-center">
-                          <Input
-                            value={link.text}
-                            onChange={(e) =>
-                              handleLinkUpdate(index, "text", e.target.value)
-                            }
-                            className="h-6 w-24 text-[10px] p-1"
-                            placeholder="Text"
-                          />
-                          <Input
-                            value={link.url}
-                            onChange={(e) =>
-                              handleLinkUpdate(index, "url", e.target.value)
-                            }
-                            className="h-6 w-32 text-[10px] p-1"
-                            placeholder="URL"
-                            onBlur={() => setEditingField(null)}
-                            autoFocus
-                          />
-                        </div>
-                      ) : (
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="hover:text-purple-600 transition-colors"
-                          onClick={(e) => {
-                            if (e.metaKey || e.ctrlKey) return;
-                            e.preventDefault();
-                            setEditingField(`link-${index}`);
-                          }}
-                        >
-                          {link.text}
-                        </a>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-4 w-4 ml-1 opacity-0 group-hover:opacity-100"
-                        onClick={() => removeLink(index)}
+              {data.address && <span>{data.address}</span>}
+              {data.address && data.links.length > 0 && (
+                <div className="w-px h-3 bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
+              )}
+              {data.links.length > 0 && (
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-cv-md">
+                  {data.links.map((link, i) =>
+                    link.url ? (
+                      <Link
+                        key={i}
+                        href={link.url}
+                        className="underline hover:text-purple-600 transition-colors text-cv-md"
+                        target="_blank"
                       >
-                        <Trash2 className="h-3 w-3 text-red-400" />
-                      </Button>
-                    </div>
+                        {link.text}
+                      </Link>
+                    ) : (
+                      <span
+                        key={i}
+                        className="hover:text-purple-600 transition-colors"
+                      >
+                        {link.text}
+                      </span>
+                    )
                   )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="absolute top-4 -right-2 opacity-0 group-hover/header:opacity-100 transition-opacity bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-full p-2 shadow-sm print:hidden">
+            <Pencil className="h-4 w-4 text-purple-600" />
+          </div>
+        </div>
+      </DialogTrigger>
+
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Edit Header Information</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-6 py-4">
+          {/* Alignment */}
+          <div className="space-y-3">
+            <Label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+              Layout Alignment
+            </Label>
+            <div className="flex gap-2">
               <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 rounded-full border border-dashed border-zinc-200 dark:border-zinc-800 text-zinc-400"
-                onClick={addLink}
+                variant={localData.alignment === "left" ? "default" : "outline"}
+                size="sm"
+                className="flex-1"
+                onClick={() =>
+                  setLocalData({ ...localData, alignment: "left" })
+                }
               >
-                <Plus className="h-3 w-3" />
+                <AlignLeft className="h-4 w-4 mr-2" />
+                Left
+              </Button>
+              <Button
+                variant={
+                  localData.alignment === "center" ? "default" : "outline"
+                }
+                size="sm"
+                className="flex-1"
+                onClick={() =>
+                  setLocalData({ ...localData, alignment: "center" })
+                }
+              >
+                <AlignCenter className="h-4 w-4 mr-2" />
+                Center
+              </Button>
+              <Button
+                variant={
+                  localData.alignment === "right" ? "default" : "outline"
+                }
+                size="sm"
+                className="flex-1"
+                onClick={() =>
+                  setLocalData({ ...localData, alignment: "right" })
+                }
+              >
+                <AlignRight className="h-4 w-4 mr-2" />
+                Right
               </Button>
             </div>
-          )}
-        </Droppable>
-      </DragDropContext>
-    </div>
+          </div>
+
+          <Separator />
+
+          {/* Basic Info */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="header-name">Full Name</Label>
+              <Input
+                id="header-name"
+                value={localData.name}
+                onChange={(e) =>
+                  setLocalData({ ...localData, name: e.target.value })
+                }
+                placeholder="e.g. John Doe"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="header-role">Professional Title</Label>
+              <Input
+                id="header-role"
+                value={localData.role}
+                onChange={(e) =>
+                  setLocalData({ ...localData, role: e.target.value })
+                }
+                placeholder="e.g. Senior Software Engineer"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="header-address">Location / Address</Label>
+            <Input
+              id="header-address"
+              value={localData.address}
+              onChange={(e) =>
+                setLocalData({ ...localData, address: e.target.value })
+              }
+              placeholder="e.g. New York, USA"
+            />
+          </div>
+
+          <Separator />
+
+          {/* Links Management */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                Contact & Social Links
+              </Label>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={addLink}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add Link
+              </Button>
+            </div>
+
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="header-links">
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="space-y-2"
+                  >
+                    {localData.links.map((link, index) => (
+                      <Draggable
+                        key={`link-${index}`}
+                        draggableId={`link-${index}`}
+                        index={index}
+                      >
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className="flex items-center gap-2 bg-zinc-50 dark:bg-zinc-900 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800"
+                          >
+                            <div
+                              {...provided.dragHandleProps}
+                              className="cursor-grab"
+                            >
+                              <GripVertical className="h-4 w-4 text-zinc-400" />
+                            </div>
+                            <div className="flex-1 grid grid-cols-2 gap-2">
+                              <Input
+                                value={link.text}
+                                onChange={(e) =>
+                                  handleLinkUpdate(
+                                    index,
+                                    "text",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Label (e.g. LinkedIn)"
+                                className="h-8 text-xs"
+                              />
+                              <Input
+                                value={link.url}
+                                onChange={(e) =>
+                                  handleLinkUpdate(index, "url", e.target.value)
+                                }
+                                placeholder="URL"
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                            <ConfirmDeleteDialog
+                              onConfirm={() => removeLink(index)}
+                              title="Delete link?"
+                              description="Are you sure you want to remove this link?"
+                            >
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-400 hover:text-red-500 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </ConfirmDeleteDialog>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 mt-4">
+          <Button onClick={handleSave}>Save Changes</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

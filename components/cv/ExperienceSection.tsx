@@ -7,6 +7,7 @@ import { Pencil, Plus, Trash2, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import {
   DragDropContext,
   Droppable,
@@ -58,8 +59,8 @@ export function ExperienceSection({
 
   return (
     <div className="flex flex-col gap-4 mt-6">
-      <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-1">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-purple-600">
+      <div className="flex items-center justify-between border-b-2 border-purple-600 pb-1">
+        <h3 className="text-cv-lg font-bold uppercase tracking-wide text-purple-600">
           Professional Experience
         </h3>
         <Button
@@ -86,7 +87,7 @@ export function ExperienceSection({
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className="group relative flex gap-3"
+                      className="group relative flex gap-3 -ml-8"
                     >
                       <div {...provided.dragHandleProps} className="mt-1">
                         <GripVertical className="h-4 w-4 text-zinc-300 group-hover:text-zinc-400 opacity-0 group-hover:opacity-100" />
@@ -173,7 +174,7 @@ export function ExperienceSection({
                           <div
                             role="button"
                             tabIndex={0}
-                            className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded p-2 transition-colors relative"
+                            className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded p-4 -mx-4 transition-colors relative pr-12"
                             onClick={() => setEditingId(item.id)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
@@ -183,35 +184,55 @@ export function ExperienceSection({
                             }}
                           >
                             <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-bold text-zinc-900 dark:text-zinc-50">
+                              <div className="flex gap-2 text-cv-md items-center">
+                                <h4 className="font-bold text-zinc-900 dark:text-zinc-50 leading-tight">
                                   {item.title}
                                 </h4>
-                                <div className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                                <div className="font-medium text-zinc-600 dark:text-zinc-400">
                                   {item.company}
                                 </div>
                               </div>
-                              <div className="text-xs font-semibold text-zinc-400 uppercase">
+                              <div className="text-cv-sm font-semibold text-zinc-400 uppercase">
                                 {item.years}
                               </div>
                             </div>
                             <div
-                              className="prose prose-sm dark:prose-invert max-w-none mt-2"
+                              className="prose prose-base text-cv-md dark:prose-invert max-w-none [&>ul]:list-disc [&>ul]:list-inside"
                               dangerouslySetInnerHTML={{
                                 __html: item.description,
                               }}
                             />
-                            <Pencil className="absolute -left-6 top-3 opacity-0 group-hover:opacity-100 h-4 w-4 text-zinc-400" />
+
+                            {/* Action Buttons Grouped on the Right */}
+                            <div className="absolute right-2 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-zinc-400 hover:text-purple-600 hover:bg-purple-50"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingId(item.id);
+                                }}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <ConfirmDeleteDialog
+                                onConfirm={() => removeItem(item.id)}
+                                title="Delete experience?"
+                                description={`Are you sure you want to delete your role at "${item.company}"?`}
+                              >
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-zinc-400 hover:text-red-500 hover:bg-red-50"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </ConfirmDeleteDialog>
+                            </div>
                           </div>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute -right-10 top-2 opacity-0 group-hover:opacity-100 h-8 w-8 text-red-400 hover:text-red-500 hover:bg-red-50"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
                   )}

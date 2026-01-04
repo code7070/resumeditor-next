@@ -16,12 +16,20 @@ export default function Home() {
     updateSummary,
     updateExperience,
     updateCustomSections,
+    updateSettings,
+    updateData,
   } = useCVData();
 
   return (
     <div className="flex h-screen flex-col bg-zinc-50 dark:bg-zinc-950">
       <AiConsentDialog />
-      <Header isAIOpen={isAIOpen} setIsAIOpen={setIsAIOpen} />
+      <Header
+        isAIOpen={isAIOpen}
+        setIsAIOpen={setIsAIOpen}
+        settings={data.settings}
+        updateSettings={updateSettings}
+        updateData={updateData}
+      />
       <div className="flex flex-1 overflow-hidden">
         <main className="flex flex-1 flex-col overflow-hidden">
           <ScrollArea className="flex-1 max-h-[calc(100vh-64px)]">

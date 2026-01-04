@@ -42,11 +42,24 @@ export function useCVData() {
     setData((prev) => ({ ...prev, customSections }));
   };
 
+  const updateSettings = (settings: Partial<CVData["settings"]>) => {
+    setData((prev) => ({
+      ...prev,
+      settings: { ...prev.settings, ...settings },
+    }));
+  };
+
+  const updateData = (newData: Partial<CVData>) => {
+    setData((prev) => ({ ...prev, ...newData }));
+  };
+
   return {
     data,
     updateHeader,
     updateSummary,
     updateExperience,
     updateCustomSections,
+    updateSettings,
+    updateData,
   };
 }
